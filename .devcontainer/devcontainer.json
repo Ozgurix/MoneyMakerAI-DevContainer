@@ -1,0 +1,61 @@
+{
+	"name": "MoneyMaker.AI",
+	"image": "ghcr.io/schefa/moneymaker-ai-devcontainer-gpu:0.1.0",
+	
+	// "build": {
+	// 	"dockerfile": "../Dockerfile.GPU", 
+	// 	"context": "..",
+	// },
+
+	"runArgs": [
+		"--gpus=all"
+	],
+	"remoteUser": "vscode",
+	"features": {
+		"docker-in-docker": "latest",
+		"git": "latest",
+	},
+	"extensions": [
+		"ms-toolsai.jupyter",
+		"ms-toolsai.jupyter-renderers",
+		"ms-kubernetes-tools.vscode-kubernetes-tools",
+		"ms-python.vscode-pylance",
+		"ms-python.python",
+		"tyriar.sort-lines",
+		"redhat.vscode-yaml",
+		"mutantdino.resourcemonitor",
+		"rsip-vision.nvidia-smi-plus"
+	],
+	"remoteEnv": {
+		"SYNC_LOCALHOST_KUBECONFIG": "true",
+		"HOST_PROJECT_PATH": "${localWorkspaceFolder}",
+		"COMPOSE_FORCE_WINDOWS_HOST": "true"
+	},
+	"forwardPorts": [
+		8501, // streamlit
+		6006, // Tensorboard
+	],
+	"mounts": [
+		"source=//var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+		"source=${env:HOME}${env:USERPROFILE}/.kube,target=/home/vscode/.kube,type=bind"
+	],
+	"userEnvProbe": "loginInteractiveShell",
+	"settings": {
+		"git.path": "/usr/bin/git",
+		"python.defaultInterpreterPath": "/usr/local/bin/python",
+		"python.linting.enabled": true,
+		"python.linting.pylintEnabled": true,
+		"python.formatting.provider": "autopep8",
+		"python.formatting.autopep8Path": "/usr/local/bin/autopep8",
+		"python.formatting.blackPath": "/usr/local/bin/black",
+		"python.linting.mypyPath": "/usr/local/py-utils/bin/mypy",
+		"python.linting.pycodestylePath": "/usr/local/py-utils/bin/pycodestyle",
+		"python.linting.pydocstylePath": "/usr/local/py-utils/bin/pydocstyle",
+		"python.linting.pylintPath": "/usr/local/py-utils/bin/pylint",
+		"vs-kubernetes.knownKubeconfigs": [
+			"/home/vscode/.kube/config"
+		],
+		"vs-kubernetes.kubeconfig": "/home/vscode/.kube/config"
+	},
+	"postCreateCommand": "sudo chmod -R ugo+rwX . && helm repo add argo https://argoproj.github.io/argo-helm"
+}

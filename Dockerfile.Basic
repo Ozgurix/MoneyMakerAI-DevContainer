@@ -1,0 +1,39 @@
+ARG IMAGENAME=ghcr.io/schefa/moneymaker-baseimage:0.1.0
+
+FROM $IMAGENAME
+
+ARG USERNAME=vscode
+ARG USER_UID=5000
+ARG USER_GID=$USER_UID
+
+# Create user
+RUN echo "Creating ${USERNAME} user..." && \
+    groupadd docker && \
+    groupadd --gid ${USER_UID} ${USERNAME} && \
+    useradd --shell /bin/sh --home-dir /home/${USERNAME} --create-home --uid ${USER_UID} --gid ${USER_GID} -m -g docker ${USERNAME} && \
+    usermod -a -G root ${USERNAME} && \
+    echo ${USERNAME} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${USERNAME} && \
+    chmod 0440 /etc/sudoers.d/${USERNAME}
+
+RUN install -d -m 770 -o ${USERNAME} -g ${USERNAME} /home/${USERNAME}/.ssh/ && \
+    ssh-keyscan -t rsa github.com >> /home/${USERNAME}/.ssh/known_hosts
+
+COPY .devcontainer/.bashrc /home/${USERNAME}/.bashrc
+
+# Kubectl
+RUN sudo apt-get update && sudo apt-get install -y apt-transport-https && \
+    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add - && \
+    echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list && \
+    sudo apt-get update && \
+    sudo apt-get install -y kubectl
+
+# Helm
+RUN curl https://baltocdn.com/helm/signing.asc | sudo apt-key add - && \
+    sudo apt-get install apt-transport-https --yes && \
+    echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list && \
+    sudo apt-get update && \
+    sudo apt-get install -y helm
+
+EXPOSE 8501
+
+ENV SHELL /bin/bash

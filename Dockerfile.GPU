@@ -1,0 +1,65 @@
+FROM tensorflow/tensorflow:latest-gpu
+
+RUN apt-get update && \
+    apt-get -y install apt-transport-https \
+    ca-certificates \
+    curl \
+    graphviz \
+    libmysqlclient-dev \
+    lsb-release \
+    openssl \
+    ssh-client \
+    sudo \ 
+    wget
+
+ARG USERNAME=vscode
+ARG USER_UID=5000
+ARG USER_GID=$USER_UID
+
+# Create user
+RUN echo "Creating ${USERNAME} user..." && \
+    groupadd docker && \
+    groupadd --gid ${USER_UID} ${USERNAME} && \
+    useradd --shell /bin/sh --home-dir /home/${USERNAME} --create-home --uid ${USER_UID} --gid ${USER_GID} -m -g docker ${USERNAME} && \
+    usermod -a -G root ${USERNAME} && \
+    echo ${USERNAME} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${USERNAME} && \
+    chmod 0440 /etc/sudoers.d/${USERNAME}
+
+RUN install -d -m 770 -o ${USERNAME} -g ${USERNAME} /home/${USERNAME}/.ssh/ && \
+    ssh-keyscan -t rsa github.com >> /home/${USERNAME}/.ssh/known_hosts
+
+# TA-lib
+RUN cd /tmp && \
+    wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz -O ta-lib.tar.gz && \
+    tar -xzf ta-lib.tar.gz && \ 
+    cd ./ta-lib && \
+    ./configure --prefix=/usr && \
+    make && \
+    sudo make install
+
+# Python packages  
+COPY requirements.txt /tmp/pip-tmp/ 
+RUN python3 -m pip --no-cache-dir install -r /tmp/pip-tmp/requirements.txt \
+    && rm -rf /tmp/pip-tmp
+RUN python3 -m pip --no-cache-dir install gym tables
+
+COPY .devcontainer/.bashrc /home/${USERNAME}/.bashrc
+
+# Kubectl
+RUN sudo apt-get update && sudo apt-get install -y apt-transport-https && \
+    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add - && \
+    echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list && \
+    sudo apt-get update && \
+    sudo apt-get install -y kubectl
+
+# Helm
+RUN curl https://baltocdn.com/helm/signing.asc | sudo apt-key add - && \
+    sudo apt-get install apt-transport-https --yes && \
+    echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list && \
+    sudo apt-get update && \
+    sudo apt-get install -y helm
+
+EXPOSE 8501
+EXPOSE 6006
+
+ENV SHELL /bin/bash

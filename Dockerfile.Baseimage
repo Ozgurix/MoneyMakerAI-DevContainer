@@ -1,0 +1,24 @@
+FROM python:3.8.10
+
+RUN apt-get update && \
+    apt-get -y install apt-transport-https \
+    graphviz \
+    default-libmysqlclient-dev \
+    openssl \
+    ssh-client \
+    sudo \
+    wget
+
+# TA-lib
+RUN cd /tmp && \
+    wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz -O ta-lib.tar.gz && \
+    tar -xzf ta-lib.tar.gz && \ 
+    cd ./ta-lib && \
+    ./configure --prefix=/usr && \
+    make && \
+    sudo make install
+
+# Python packages  
+COPY requirements.txt /tmp/pip-tmp/
+RUN pip3 --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/requirements.txt \
+    && rm -rf /tmp/pip-tmp
