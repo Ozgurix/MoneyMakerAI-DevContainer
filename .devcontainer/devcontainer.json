@@ -1,12 +1,10 @@
 {
 	"name": "MoneyMaker.AI",
 	"image": "ghcr.io/schefa/moneymaker-ai-devcontainer-gpu:0.1.0",
-	
 	// "build": {
 	// 	"dockerfile": "../Dockerfile.GPU", 
 	// 	"context": "..",
 	// },
-
 	"runArgs": [
 		"--gpus=all"
 	],
@@ -52,10 +50,12 @@
 		"python.linting.pycodestylePath": "/usr/local/py-utils/bin/pycodestyle",
 		"python.linting.pydocstylePath": "/usr/local/py-utils/bin/pydocstyle",
 		"python.linting.pylintPath": "/usr/local/py-utils/bin/pylint",
-		"vs-kubernetes.knownKubeconfigs": [
-			"/home/vscode/.kube/config"
-		],
-		"vs-kubernetes.kubeconfig": "/home/vscode/.kube/config"
+		"vs-kubernetes": {
+			"vs-kubernetes.knownKubeconfigs": [
+				"/home/vscode/.kube/config"
+			],
+			"vs-kubernetes.kubeconfig": "/home/vscode/.kube/config"
+		},
 	},
 	"postCreateCommand": "sudo chmod -R ugo+rwX . && helm repo add argo https://argoproj.github.io/argo-helm"
 }
