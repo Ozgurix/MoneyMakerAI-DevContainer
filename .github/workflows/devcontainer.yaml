@@ -22,7 +22,7 @@ jobs:
       registry: ghcr.io
       dockerfile_path: ./Dockerfile.Baseimage
       base_image: python:3.8.10
-      image_name: moneymaker-ai-devcontainer
+      image_name: moneymaker-baseimage
     secrets:
       token: ${{ secrets.GITHUB_TOKEN }}
 
