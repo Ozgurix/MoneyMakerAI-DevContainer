@@ -1,0 +1,59 @@
+on:
+  workflow_call:
+    inputs:
+      registry:
+        required: true
+        type: string
+      dockerfile_path:
+        required: true
+        type: string
+      base_image:
+        required: true
+        type: string
+      image_name:
+        required: true
+        type: string
+    secrets:
+      token:
+        required: true
+    outputs:
+      imagerepository:
+        value: ${{ jobs.build_and_push.outputs.imagerepository }}
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    outputs:
+      imagerepository: ${{ steps.push_image.outputs.IMAGEREPOSITORY }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set env
+        run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ${{ inputs.registry }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.token }}
+
+      - name: Build image
+        run: docker build --build-arg IMAGENAME=${{ inputs.base_image }} . --file  ${{ inputs.dockerfile_path }} --tag ${{ inputs.image_name }} --label "runnumber=${GITHUB_RUN_ID}"
+        env:
+          PAT: ${{ secrets.PAT }}
+
+      - id: push_image
+        name: Push image
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/${{ inputs.image_name }}
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          VERSION=$(echo $VERSION | sed -e 's/^v//')
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+          echo "::set-output name=IMAGEREPOSITORY::$(echo $IMAGE_ID:$VERSION)"
+          docker tag ${{ inputs.image_name }} $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION

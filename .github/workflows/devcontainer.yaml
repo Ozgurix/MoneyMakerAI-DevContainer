@@ -17,76 +17,22 @@ env:
 
 jobs:
   base_image:
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
-    outputs:
-      imagerepository: ${{ steps.push_image.outputs.IMAGEREPOSITORY }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set env
-        run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-
-      - name: Build image
-        run: docker build . --file ./Dockerfile.Baseimage --tag $IMAGE_TAG_BASEIMAGE --label "runnumber=${GITHUB_RUN_ID}"
-
-      - id: push_image
-        name: Push image
-        run: |
-          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_TAG_BASEIMAGE
-          # Change all uppercase to lowercase
-          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-          # Strip git ref prefix from version
-          VERSION=$(echo $VERSION | sed -e 's/^v//')
-          echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
-          echo "::set-output name=IMAGEREPOSITORY::$(echo $IMAGE_ID:$VERSION)"
-          docker tag $IMAGE_TAG_BASEIMAGE $IMAGE_ID:$VERSION
-          docker push $IMAGE_ID:$VERSION
+    uses: ./.github/workflows/build_and_push.yaml
+    with:
+      registry: ghcr.io
+      dockerfile_path: ./Dockerfile.Baseimage
+      base_image: python:3.8.10
+      image_name: moneymaker-baseimage
+    secrets:
+      token: ${{ secrets.GITHUB_TOKEN }}
 
   dev_container:
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/build_and_push.yaml
     needs: base_image
-
-    permissions:
-      packages: write
-      contents: read
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set env
-        run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-
-      - name: Build image
-        run: docker build . --build-arg IMAGENAME=${{ needs.base_image.outputs.imagerepository }} --file ./Dockerfile.Basic --tag $IMAGE_TAG_DEVCONTAINER --label "runnumber=${GITHUB_RUN_ID}"
-
-      - name: Push image
-        run: |
-          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_TAG_DEVCONTAINER
-          # Change all uppercase to lowercase
-          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-          # Strip git ref prefix from version
-          VERSION=$(echo $VERSION | sed -e 's/^v//')
-          echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
-          docker tag $IMAGE_TAG_DEVCONTAINER $IMAGE_ID:$VERSION
-          docker push $IMAGE_ID:$VERSION
+    with:
+      registry: ghcr.io
+      dockerfile_path: ./Dockerfile.Basic
+      base_image: ${{ needs.base_image.outputs.imagerepository }}
+      image_name: moneymaker-ai-devcontainer
+    secrets:
+      token: ${{ secrets.GITHUB_TOKEN }}
