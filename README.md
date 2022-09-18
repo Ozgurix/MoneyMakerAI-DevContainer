@@ -18,3 +18,16 @@ Dockerfile.Baseimage    - MoneyMaker.AI Base Image
 Dockerfile.GPU          - DevContainer with GPU Support
 requirements.txt        - Python libraries list
 ```
+
+## Local Build
+
+```bash
+# Base Image
+docker build . -f Dockerfile.Baseimage -t moneymaker-baseimage 
+
+# Basic DevContainer
+docker build . -f Dockerfile.Basic -t moneymaker-ai-devcontainer
+
+# GPU DevContainer
+docker build . -f Dockerfile.GPU -t moneymaker-ai-devcontainer-gpu
+```

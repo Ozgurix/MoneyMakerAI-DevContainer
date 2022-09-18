@@ -1,6 +1,6 @@
 {
 	"name": "MoneyMaker.AI",
-	"image": "ghcr.io/schefa/moneymaker-ai-devcontainer-gpu:0.1.0",
+	"image": "ghcr.io/schefa/moneymaker-ai-devcontainer-gpu:0.2.0",
 	// "build": {
 	// 	"dockerfile": "../Dockerfile.GPU", 
 	// 	"context": "..",

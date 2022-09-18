@@ -6,6 +6,9 @@ ARG USERNAME=vscode
 ARG USER_UID=5000
 ARG USER_GID=$USER_UID
 
+RUN apt-get update && \
+    apt-get -y install golang
+
 # Create user
 RUN echo "Creating ${USERNAME} user..." && \
     groupadd docker && \
