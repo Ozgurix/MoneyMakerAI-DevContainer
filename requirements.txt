@@ -22,7 +22,7 @@ pandoc==2.0.1
 Pillow==9.0.0
 plotly==5.5.0
 prettytable==3.0.0
-protobuf==3.20.0
+protobuf==3.20.2
 pyarrow==6.0.1
 pydot==1.4.2
 pylint==2.12.2
